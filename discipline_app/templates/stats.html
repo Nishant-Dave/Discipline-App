@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Your Stats</h1>
+<p><strong>Current Streak:</strong> {{ streak }}</p>
+<p><strong>Longest Streak:</strong> {{ longest_streak }}</p>
+<p><strong>Completion Percentage:</strong> {{ completion_percentage }}%</p>
+
+<h2>Recent Failures</h2>
+{% if failures %}
+    <ul>
+    {% for record in failures %}
+        <li>{{ record.date }} - {{ record.task.title }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No failures yet! Keep it up.</p>
+{% endif %}
+{% endblock %}

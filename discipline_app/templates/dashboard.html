@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Discipline Dashboard</h1>
+<p><strong>Current Streak:</strong> {{ streak }} days</p>
+<p><strong>Longest Streak:</strong> {{ longest_streak }}</p>
+<p><strong>Today:</strong> {{ today }}</p>
+
+{% if all_done %}
+    <p style="color:green">✅ All tasks completed today. Discipline maintained.</p>
+{% else %}
+    <p style="color:red">⚠️ Incomplete tasks remain. Complete before deadline.</p>
+{% endif %}
+
+<h2>Your Active Tasks</h2>
+{% if tasks %}
+    <ul>
+    {% for item in tasks %}
+        <li>
+            <strong>{{ item.task.title }}</strong><br>
+            Deadline: {{ item.task.deadline_time }}<br>
+            Status: {{ item.record.status }}<br>
+            {% if item.record.status == 'PENDING' %}
+                <form method="post" action="{% url 'checkin' item.task.id %}" style="display:inline">
+                    {% csrf_token %}
+                    <button type="submit">Mark Done</button>
+                </form>
+            {% elif item.record.status == 'DONE' %}
+                ✅ Completed
+            {% elif item.record.status == 'FAILED' %}
+                ❌ Failed
+            {% endif %}
+            <form method="post" action="{% url 'deactivate' item.task.id %}" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" onclick="return confirm('Deactivate task? Cannot reactivate.')">Deactivate</button>
+            </form>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No active tasks. Create one below.</p>
+{% endif %}
+
+<a href="{% url 'create_task_page' %}">Create New Task</a>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if ('{{ user.timezone }}' === 'UTC') {
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            fetch('{% url "set_timezone" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ timezone: tz })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('Timezone updated to:', tz);
+                } else {
+                    console.error('Failed to update timezone');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Settings</h2>
+<form method="post">
+    {% csrf_token %}
+    <label>Timezone:</label>
+    <select name="timezone">
+        {% for tz in timezones %}
+        <option value="{{ tz }}" {% if user.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+        {% endfor %}
+    </select><br>
+    <button type="submit">Update Timezone</button>
+</form>
+{% endblock %}
