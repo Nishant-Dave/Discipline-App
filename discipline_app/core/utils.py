@@ -2,6 +2,14 @@ from django.utils import timezone
 import pytz
 from .models import Streak, DailyRecord
 
+def update_discipline_score(user):
+    from .models import DailyRecord
+    total = DailyRecord.objects.filter(task__user=user).count()
+    completed = DailyRecord.objects.filter(task__user=user, status='DONE').count()
+    score = (completed / total * 100) if total > 0 else 0
+    user.discipline_score = round(score, 2)
+    user.save()
+
 def get_user_local_time(user):
     """Return current datetime in user's timezone."""
     tz = pytz.timezone(user.timezone)

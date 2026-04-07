@@ -2,9 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, Group, Permission
 
 class User(AbstractUser):
-    # Ensure default is UTC and not nullable
     timezone = models.CharField(max_length=50, default='UTC', null=False, blank=False)
     failure_count = models.IntegerField(default=0)
+    discipline_score = models.FloatField(default=0.0)
     groups = models.ManyToManyField(
         Group,
         verbose_name='groups',
@@ -13,6 +13,15 @@ class User(AbstractUser):
         related_name='core_user_set',
         related_query_name='user',
     )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        verbose_name='user permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        related_name='core_user_set',
+        related_query_name='user',
+    )
+
     user_permissions = models.ManyToManyField(
         Permission,
         verbose_name='user permissions',

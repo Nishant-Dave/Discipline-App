@@ -18,15 +18,13 @@ class UserStatsAPIView(APIView):
         completed_records = DailyRecord.objects.filter(task__user=user, status='DONE').count()
         failed_records = DailyRecord.objects.filter(task__user=user, status='FAILED').count()
         
-        completion_percentage = 0
-        if total_records > 0:
-            completion_percentage = (completed_records / total_records) * 100
+        # We can now use the pre-calculated score from the User model
         
         data = {
             'current_streak': streak_obj.current_streak,
             'longest_streak': streak_obj.longest_streak,
             'total_failures': failed_records,
-            'completion_percentage': round(completion_percentage, 2)
+            'discipline_score': user.discipline_score
         }
         
         return Response(data)

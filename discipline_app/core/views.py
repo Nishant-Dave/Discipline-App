@@ -11,7 +11,7 @@ import logging
 
 from .forms import CustomUserCreationForm
 from .models import Task, DailyRecord, Streak, ActivityLog
-from .utils import get_user_local_time, recalculate_streak
+from .utils import get_user_local_time, recalculate_streak, update_discipline_score
 from services.consequence_engine import ConsequenceEngine
 
 logger = logging.getLogger(__name__)
@@ -166,6 +166,7 @@ def checkin(request, task_id):
     record.marked_done_at = timezone.now()
     record.save()
     recalculate_streak(user)
+    update_discipline_score(user)
 
     ActivityLog.objects.create(
         user=user,

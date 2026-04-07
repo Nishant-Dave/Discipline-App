@@ -3,7 +3,6 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from django.utils import timezone
 from .models import Task, DailyRecord, ActivityLog
-, ActivityLog
 from .serializers import TaskSerializer, DailyRecordSerializer
 from .utils import get_user_local_time, recalculate_streak
 

@@ -1,6 +1,7 @@
 import logging
 from django.utils import timezone
 from core.models import Streak, ActivityLog
+from core.utils import update_discipline_score
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,6 +17,7 @@ class ConsequenceEngine:
         user = daily_record.task.user
         user.failure_count += 1
         user.save()
+        update_discipline_score(user)
 
         # Reset user streak
         streak, _ = Streak.objects.get_or_create(user=user)
