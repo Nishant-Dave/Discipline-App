@@ -85,12 +85,12 @@ def dashboard(request):
             task=task, date=today, defaults={'status': 'PENDING'}
         )
         
-        deadline = timezone.make_aware(
-            timezone.datetime.combine(today, task.deadline_time),
-            timezone.get_current_timezone()
-        )
         user_tz = pytz.timezone(user.timezone)
-        deadline_local = deadline.astimezone(user_tz)
+        naive_dt = timezone.datetime.combine(today, task.deadline_time)
+        try:
+            deadline_local = user_tz.localize(naive_dt)
+        except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
+            deadline_local = user_tz.localize(naive_dt, is_dst=False)
         
         if record.status == 'PENDING' and local_now > deadline_local:
             ConsequenceEngine.apply_failure(record)
@@ -152,15 +152,15 @@ def checkin(request, task_id):
     if record.status != 'PENDING':
         return JsonResponse({'error': 'Task already processed today'}, status=400)
     
-    deadline = timezone.make_aware(
-        timezone.datetime.combine(today, task.deadline_time),
-        timezone.get_current_timezone()
-    )
     user_tz = pytz.timezone(user.timezone)
-    deadline_local = deadline.astimezone(user_tz)
+    naive_dt = timezone.datetime.combine(today, task.deadline_time)
+    try:
+        deadline_local = user_tz.localize(naive_dt)
+    except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
+        deadline_local = user_tz.localize(naive_dt, is_dst=False)
     
     if local_now > deadline_local:
-        return JsonResponse({'error': 'Deadline passed.'}, status=403)
+        return JsonResponse({'error': 'Deadline passed. Record is locked.'}, status=403)
     
     record.status = 'DONE'
     record.marked_done_at = timezone.now()

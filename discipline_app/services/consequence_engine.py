@@ -11,6 +11,7 @@ class ConsequenceEngine:
     def apply_failure(daily_record):
         # Mark record as FAILED
         daily_record.status = 'FAILED'
+        daily_record._bypass_lock = True
         daily_record.save()
 
         # Update user failure count

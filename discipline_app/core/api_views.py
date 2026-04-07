@@ -51,14 +51,17 @@ class CheckInAPIView(views.APIView):
         if record.status == 'DONE':
             return response.Response({'error': 'Already completed today'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Simple deadline check
-        deadline = timezone.make_aware(
-            timezone.datetime.combine(today, task.deadline_time),
-            timezone.get_current_timezone()
-        )
+        # Strict deadline check using accurate user timezone localization
+        import pytz
+        user_tz = pytz.timezone(request.user.timezone)
+        naive_dt = timezone.datetime.combine(today, task.deadline_time)
+        try:
+            deadline_local = user_tz.localize(naive_dt)
+        except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
+            deadline_local = user_tz.localize(naive_dt, is_dst=False)
         
-        if local_now > deadline:
-            return response.Response({'error': 'Deadline passed'}, status=status.HTTP_403_FORBIDDEN)
+        if local_now > deadline_local:
+            return response.Response({'error': 'Deadline passed. Record is locked.'}, status=status.HTTP_403_FORBIDDEN)
             
         # Proof validation (if required by task - this logic needs to be implemented in Task model)
         # For now, assume proof is optional or handled by serializer validation later
