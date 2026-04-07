@@ -149,8 +149,11 @@ def checkin(request, task_id):
         task=task, date=today, defaults={'status': 'PENDING'}
     )
     
+    if record.date < today:
+        return JsonResponse({'error': 'Cannot edit past tasks'}, status=400)
+    
     if record.status != 'PENDING':
-        return JsonResponse({'error': 'Task already processed today'}, status=400)
+        return JsonResponse({'error': f'Record is locked (Status: {record.status})'}, status=400)
     
     user_tz = pytz.timezone(user.timezone)
     naive_dt = timezone.datetime.combine(today, task.deadline_time)

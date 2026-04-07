@@ -48,8 +48,11 @@ class CheckInAPIView(views.APIView):
             task=task, date=today, defaults={'status': 'PENDING'}
         )
         
-        if record.status == 'DONE':
-            return response.Response({'error': 'Already completed today'}, status=status.HTTP_400_BAD_REQUEST)
+        if record.date < today:
+             return response.Response({'error': 'Cannot edit past tasks'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if record.status != 'PENDING':
+            return response.Response({'error': f'Record is locked (Status: {record.status})'}, status=status.HTTP_400_BAD_REQUEST)
         
         # Strict deadline check using accurate user timezone localization
         import pytz
