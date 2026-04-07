@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Task, DailyRecord, ActivityLog
+from .models import Task, DailyRecord, ActivityLog, User
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

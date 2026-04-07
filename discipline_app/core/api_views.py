@@ -8,13 +8,13 @@ from .utils import get_user_local_time, recalculate_streak
 
 # ... rest of code ...
 
-    def perform_create(self, serializer):
-        task = serializer.save(user=self.request.user)
-        ActivityLog.objects.create(
-            user=self.request.user,
-            action="Task created",
-            metadata={'task': task.title}
-        )
+# def perform_create(self, serializer):
+#     task = serializer.save(user=self.request.user)
+#     ActivityLog.objects.create(
+#         user=self.request.user,
+#         action="Task created",
+#         metadata={'task': task.title}
+#     )
 
 
 class DailyRecordListAPIView(generics.ListAPIView):
