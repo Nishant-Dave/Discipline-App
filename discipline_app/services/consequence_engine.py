@@ -20,16 +20,18 @@ class ConsequenceEngine:
         user.save()
         update_discipline_score(user)
 
-        # Reset user streak
-        streak, _ = Streak.objects.get_or_create(user=user)
-        streak.current_streak = 0
-        streak.save()
+        # Apply consequence based on level
+        from core.utils import apply_failure_consequences
+        apply_failure_consequences(user, consequence_level=daily_record.task.consequence_level)
 
         # Log Activity
         ActivityLog.objects.create(
             user=user,
             action="Task failed",
-            metadata={'task': daily_record.task.title}
+            metadata={
+                'task': daily_record.task.title,
+                'consequence': daily_record.task.consequence_level
+            }
         )
 
-        logger.warning(f"Task '{daily_record.task.title}' failed for user '{user.username}'. Streak reset.")
+        logger.warning(f"Task '{daily_record.task.title}' failed for user '{user.username}'. Streak penalty applied.")

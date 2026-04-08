@@ -17,7 +17,6 @@
     {% for item in tasks %}
         <li>
             <strong>{{ item.task.title }}</strong><br>
-            Deadline: {{ item.task.deadline_time }}<br>
             Status: {{ item.record.status }}<br>
             {% if item.record.status == 'PENDING' %}
                 <form method="post" action="{% url 'checkin' item.task.id %}" style="display:inline">

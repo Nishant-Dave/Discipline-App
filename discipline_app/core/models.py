@@ -34,11 +34,21 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+def default_days_of_week():
+    return ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+
 class Task(models.Model):
+    CONSEQUENCE_CHOICES = [
+        ('easy', 'Easy'),
+        ('medium', 'Medium'),
+        ('hard', 'Hard'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
-    deadline_time = models.TimeField()
+    days_of_week = models.JSONField(default=default_days_of_week)
+    consequence_level = models.CharField(max_length=10, choices=CONSEQUENCE_CHOICES, default='medium')
     start_date = models.DateField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -47,7 +57,7 @@ class Task(models.Model):
         return f"{self.title} ({self.user.username})"
 
     class Meta:
-        ordering = ['deadline_time']
+        ordering = ['-created_at']
 
 class DailyRecord(models.Model):
     STATUS_CHOICES = [
@@ -78,35 +88,20 @@ class DailyRecord(models.Model):
             old = DailyRecord.objects.get(pk=self.pk)
             local_now = get_user_local_time(self.task.user)
 
-            user_tz = pytz.timezone(self.task.user.timezone)
-            naive_dt = timezone.datetime.combine(old.date, self.task.deadline_time)
-            try:
-                deadline_local = user_tz.localize(naive_dt)
-            except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
-                deadline_local = user_tz.localize(naive_dt, is_dst=False)
-
             is_past_record = old.date < local_now.date()
-            is_past_deadline = local_now > deadline_local
             bypass = getattr(self, '_bypass_lock', False)
 
-            # Prevent edit of past dates
             if is_past_record:
+                if old.status == 'PENDING' and self.status == 'DONE':
+                     raise ValidationError("Cannot mark task as done after deadline.")
+                
+                # If automated failure bypass is running, allow it
                 if old.status == 'PENDING' and bypass and self.status == 'FAILED':
                     pass
                 elif bypass:
                     pass
                 elif old.status != self.status or old.proof != self.proof:
-                    raise ValidationError("Past tasks cannot be edited.")
-
-            # Prevent edit of anything past the deadline
-            if is_past_deadline:
-                if old.status == 'PENDING' and self.status == 'DONE':
-                     raise ValidationError("Cannot mark task as done after deadline.")
-                
-                # Make already finalized records strictly immutable
-                if old.status in ['DONE', 'FAILED']:
-                    if old.status != self.status or old.proof != self.proof:
-                        raise ValidationError("Record is immutable after deadline.")
+                     raise ValidationError("Past tasks cannot be edited. Record is immutable.")
 
         super().save(*args, **kwargs)
 

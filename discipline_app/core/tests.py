@@ -27,7 +27,8 @@ class DisciplineAppTests(TestCase):
         task = Task.objects.create(
             user=self.user,
             title='Morning Meditation',
-            deadline_time=time(8, 0)
+            days_of_week=['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            consequence_level='medium'
         )
         self.assertEqual(task.title, 'Morning Meditation')
         self.assertTrue(task.is_active)
@@ -39,7 +40,8 @@ class DisciplineAppTests(TestCase):
         task = Task.objects.create(
             user=self.user,
             title='Read Book',
-            deadline_time=time(23, 59)  # Late deadline to ensure it passes
+            days_of_week=['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            consequence_level='medium'
         )
         
         local_now = get_user_local_time(self.user)
@@ -58,24 +60,25 @@ class DisciplineAppTests(TestCase):
 
     def test_deadline_failure_logic(self):
         """3. Deadline failure logic"""
-        # We need a deadline strictly in the past for *today*
-        # So we get current local time, and set deadline_time to an hour ago.
+        # Tasks are now valid for the entire day.
+        # So we test checking in on a past day instead of a past hour.
         local_now = get_user_local_time(self.user)
-        past_hour = (local_now - timedelta(hours=1)).time()
+        yesterday = (local_now - timedelta(days=1)).date()
         
         task = Task.objects.create(
             user=self.user,
             title='Early Morning Task',
-            deadline_time=past_hour
+            days_of_week=['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            consequence_level='medium'
         )
         
         record = DailyRecord.objects.create(
             task=task,
-            date=local_now.date(),
+            date=yesterday,
             status='PENDING'
         )
         
-        # Trying to check in a task whose deadline today has passed should raise ValidationError
+        # Trying to check in a task from a past day should raise ValidationError
         record.status = 'DONE'
         with self.assertRaises(ValidationError) as context:
             record.save()
@@ -87,7 +90,8 @@ class DisciplineAppTests(TestCase):
         task = Task.objects.create(
             user=self.user, 
             title='Study', 
-            deadline_time=time(10, 0)
+            days_of_week=['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+            consequence_level='medium'
         )
         
         local_now = get_user_local_time(self.user)

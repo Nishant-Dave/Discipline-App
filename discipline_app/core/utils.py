@@ -17,56 +17,49 @@ def get_user_local_time(user):
 
 def recalculate_streak(user):
     """
-    Recalculate user's current streak based on all active tasks.
-    Streak = consecutive days where ALL active tasks were DONE.
+    Incremental streak update for today. Handless 'no task days'.
     """
-    from .models import Task, DailyRecord  # avoid circular import
+    from .models import Task, DailyRecord
     today = get_user_local_time(user).date()
-    
-    streak = 0
-    check_date = today
-    while True:
-        # Get all active tasks for user
-        tasks = Task.objects.filter(user=user, is_active=True)
-        if not tasks:
-            break
-        
-        # Check if all tasks have DONE record for check_date
-        all_done = True
-        for task in tasks:
-            try:
-                record = DailyRecord.objects.get(task=task, date=check_date)
-                if record.status != 'DONE':
-                    all_done = False
-                    break
-            except DailyRecord.DoesNotExist:
-                all_done = False
-                break
-        
-        if all_done:
-            streak += 1
-            check_date = check_date - timezone.timedelta(days=1)
-        else:
-            break
-    
-    # Update streak object
     streak_obj, _ = Streak.objects.get_or_create(user=user)
-    streak_obj.current_streak = streak
-    if streak > streak_obj.longest_streak:
-        streak_obj.longest_streak = streak
-    if streak > 0:
-        streak_obj.last_success_date = today
-    else:
-        streak_obj.last_success_date = None
-    streak_obj.save()
-    return streak
+    
+    day_str = today.strftime('%a').lower()
+    tasks_today = [t for t in Task.objects.filter(user=user, is_active=True) if day_str in t.days_of_week]
+    
+    # Handle "no task day"
+    if not tasks_today:
+        return streak_obj.current_streak
+        
+    all_done = True
+    for task in tasks_today:
+        if not DailyRecord.objects.filter(task=task, date=today, status='DONE').exists():
+            all_done = False
+            break
+            
+    if all_done:
+        if streak_obj.last_success_date != today:
+            streak_obj.current_streak += 1
+            streak_obj.last_success_date = today
+            if streak_obj.current_streak > streak_obj.longest_streak:
+                streak_obj.longest_streak = streak_obj.current_streak
+            streak_obj.save()
+            
+    return streak_obj.current_streak
 
-def apply_failure_consequences(user):
-    """Called when ANY task fails. Resets streak."""
+def apply_failure_consequences(user, consequence_level='medium'):
+    """Applies streak deductions based on consequence level."""
     streak_obj, _ = Streak.objects.get_or_create(user=user)
-    # Reset current streak
-    streak_obj.current_streak = 0
-    # longest_streak remains unchanged
-    streak_obj.last_success_date = None
+    
+    if consequence_level == 'easy':
+        streak_obj.current_streak = max(0, streak_obj.current_streak - 1)
+    elif consequence_level == 'medium':
+        streak_obj.current_streak = max(0, streak_obj.current_streak - 3)
+    elif consequence_level == 'hard':
+        streak_obj.current_streak = 0
+    else:
+        streak_obj.current_streak = 0
+        
+    if streak_obj.current_streak == 0:
+        streak_obj.last_success_date = None
+        
     streak_obj.save()
-    # Log: we can see failure via DailyRecord failed_at

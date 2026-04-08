@@ -9,7 +9,7 @@ class UserSerializer(serializers.ModelSerializer):
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ('id', 'title', 'description', 'deadline_time', 'is_active', 'created_at')
+        fields = ('id', 'title', 'description', 'days_of_week', 'consequence_level', 'is_active', 'created_at')
         read_only_fields = ('created_at', 'is_active')
 
 class DailyRecordSerializer(serializers.ModelSerializer):

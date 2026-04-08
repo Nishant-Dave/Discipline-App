@@ -80,20 +80,25 @@ def dashboard(request):
     
     task_data = []
     all_done_today = True
+    day_str = today.strftime('%a').lower()
+    
+    # 1. Sweep and fail all past pending records
+    past_pending = DailyRecord.objects.filter(
+        task__user=user, 
+        status='PENDING', 
+        date__lt=today
+    )
+    for record in past_pending:
+        ConsequenceEngine.apply_failure(record)
+    
+    # 2. Setup today's items based on days_of_week
     for task in tasks:
+        if day_str not in task.days_of_week:
+            continue
+            
         record, created = DailyRecord.objects.get_or_create(
             task=task, date=today, defaults={'status': 'PENDING'}
         )
-        
-        user_tz = pytz.timezone(user.timezone)
-        naive_dt = timezone.datetime.combine(today, task.deadline_time)
-        try:
-            deadline_local = user_tz.localize(naive_dt)
-        except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
-            deadline_local = user_tz.localize(naive_dt, is_dst=False)
-        
-        if record.status == 'PENDING' and local_now > deadline_local:
-            ConsequenceEngine.apply_failure(record)
         
         if record.status != 'DONE':
             all_done_today = False
@@ -121,14 +126,15 @@ def create_task(request):
     user = request.user
     title = request.POST.get('title')
     description = request.POST.get('description', '')
-    deadline_time = request.POST.get('deadline_time')
+    days_of_week = request.POST.getlist('days_of_week')
+    consequence_level = request.POST.get('consequence_level', 'medium')
     
-    if not title or not deadline_time:
-        return JsonResponse({'error': 'Title and deadline required'}, status=400)
+    if not title or not days_of_week:
+        return JsonResponse({'error': 'Title and at least one day required'}, status=400)
     
     Task.objects.create(
         user=user, title=title, description=description,
-        deadline_time=deadline_time, is_active=True
+        days_of_week=days_of_week, consequence_level=consequence_level, is_active=True
     )
     ActivityLog.objects.create(
         user=user,
@@ -155,14 +161,7 @@ def checkin(request, task_id):
     if record.status != 'PENDING':
         return JsonResponse({'error': f'Record is locked (Status: {record.status})'}, status=400)
     
-    user_tz = pytz.timezone(user.timezone)
-    naive_dt = timezone.datetime.combine(today, task.deadline_time)
-    try:
-        deadline_local = user_tz.localize(naive_dt)
-    except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
-        deadline_local = user_tz.localize(naive_dt, is_dst=False)
-    
-    if local_now > deadline_local:
+    if local_now.date() > record.date:
         return JsonResponse({'error': 'Deadline passed. Record is locked.'}, status=403)
     
     record.status = 'DONE'

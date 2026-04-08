@@ -54,18 +54,7 @@ class CheckInAPIView(views.APIView):
         if record.status != 'PENDING':
             return response.Response({'error': f'Record is locked (Status: {record.status})'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Strict deadline check using accurate user timezone localization
-        import pytz
-        user_tz = pytz.timezone(request.user.timezone)
-        naive_dt = timezone.datetime.combine(today, task.deadline_time)
-        try:
-            deadline_local = user_tz.localize(naive_dt)
-        except (pytz.NonExistentTimeError, pytz.AmbiguousTimeError):
-            deadline_local = user_tz.localize(naive_dt, is_dst=False)
-        
-        if local_now > deadline_local:
-            return response.Response({'error': 'Deadline passed. Record is locked.'}, status=status.HTTP_403_FORBIDDEN)
-            
+        # Tasks are valid for the entire day, time-based checks are removed.            
         # Proof validation (if required by task - this logic needs to be implemented in Task model)
         # For now, assume proof is optional or handled by serializer validation later
         

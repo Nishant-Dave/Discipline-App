@@ -5,8 +5,26 @@
     {% csrf_token %}
     <input type="text" name="title" placeholder="Task title" required><br>
     <textarea name="description" placeholder="Description (optional)"></textarea><br>
-    <label>Deadline time (24h):</label>
-    <input type="time" name="deadline_time" required><br>
+    <div class="form-group">
+        <label>Active Days (Task targets):</label><br>
+        <input type="checkbox" name="days_of_week" value="mon" checked> Mon
+        <input type="checkbox" name="days_of_week" value="tue" checked> Tue
+        <input type="checkbox" name="days_of_week" value="wed" checked> Wed
+        <input type="checkbox" name="days_of_week" value="thu" checked> Thu
+        <input type="checkbox" name="days_of_week" value="fri" checked> Fri
+        <input type="checkbox" name="days_of_week" value="sat" checked> Sat
+        <input type="checkbox" name="days_of_week" value="sun" checked> Sun
+    </div>
+    
+    <div class="form-group" style="margin-top: 10px;">
+        <label>Failure Consequence Severity:</label><br>
+        <select name="consequence_level">
+            <option value="easy">Easy (Lose 1 streak day)</option>
+            <option value="medium" selected>Medium (Lose 3 streak days)</option>
+            <option value="hard">Hard (Complete streak reset)</option>
+        </select>
+    </div>
+    <br>
     <button type="submit">Create Non-Negotiable Task</button>
 </form>
 {% endblock %}
