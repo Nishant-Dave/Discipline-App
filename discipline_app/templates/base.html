@@ -8,7 +8,7 @@
 <body>
     <nav>
         <a href="{% url 'dashboard' %}">Dashboard</a>
-        <a href="{% url 'create_task_page' %}">Create Task</a>
+        <a href="{% url 'new_task_page' %}">Create Task</a>
         <a href="{% url 'stats' %}">Stats</a>
         <a href="{% url 'user_settings' %}">Settings</a>
         {% if user.is_authenticated %}
