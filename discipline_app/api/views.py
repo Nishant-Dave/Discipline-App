@@ -5,7 +5,7 @@ from core.models import Task, ActivityLog
 from core.serializers import TaskSerializer
 
 # Consolidate internal API views by importing them
-from core.api_views import DailyRecordListAPIView, CheckInAPIView
+from core.api_views import DailyRecordListAPIView, CheckInAPIView, HistoryAPIView
 from core.api_logs import ActivityLogListAPIView
 from core.api_stats import WeeklyReportAPIView
 

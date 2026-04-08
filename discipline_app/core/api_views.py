@@ -80,3 +80,21 @@ class CheckInAPIView(views.APIView):
             
         return response.Response(response_data, status=status.HTTP_200_OK)
 
+class HistoryAPIView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        records = DailyRecord.objects.filter(
+            task__user=request.user
+        ).select_related('task').order_by('-date', '-id')[:20]
+        
+        data = []
+        for r in records:
+            data.append({
+                'task_title': r.task.title,
+                'status': r.status,
+                'date': r.date.isoformat(),
+                'proof': r.proof.url if r.proof else None
+            })
+            
+        return response.Response(data)

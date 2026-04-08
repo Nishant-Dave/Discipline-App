@@ -40,26 +40,42 @@ class WeeklyReportAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        today = timezone.now().date()
+        from core.utils import get_user_local_time
+        today = get_user_local_time(user).date()
+        seven_days_ago = today - datetime.timedelta(days=6)
+        
+        # Optimize with single query using annotate
+        stats = DailyRecord.objects.filter(
+            task__user=user, 
+            date__range=[seven_days_ago, today]
+        ).values('date').annotate(
+            total=Count('id'),
+            completed=Count('id', filter=Q(status='DONE')),
+            failed=Count('id', filter=Q(status='FAILED'))
+        ).order_by('date')
+        
+        stats_dict = {
+            item['date']: item
+            for item in stats
+        }
+        
         report = []
         for i in range(7):
-            date = today - datetime.timedelta(days=i)
-            records = DailyRecord.objects.filter(task__user=user, date=date)
+            d = today - datetime.timedelta(days=6-i)
+            day_data = stats_dict.get(d, {'total': 0, 'completed': 0, 'failed': 0})
             
-            total = records.count()
-            completed = records.filter(status='DONE').count()
-            failed = records.filter(status='FAILED').count()
+            total = day_data['total']
+            completed = day_data['completed']
+            failed = day_data['failed']
             
             percentage = (completed / total * 100) if total > 0 else 0
             
             report.append({
-                'date': date.isoformat(),
+                'date': d.isoformat(),
                 'total_tasks': total,
                 'completed_tasks': completed,
                 'failed_tasks': failed,
                 'completion_percentage': round(percentage, 2)
             })
         
-        # Sort by date (ascending)
-        report.sort(key=lambda x: x['date'])
         return Response(report)
