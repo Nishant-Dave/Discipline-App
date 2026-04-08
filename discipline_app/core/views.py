@@ -106,6 +106,7 @@ def dashboard(request):
         task_data.append({'task': task, 'record': record})
     
     streak_obj, _ = Streak.objects.get_or_create(user=user)
+    recent_activity = ActivityLog.objects.filter(user=user).order_by('-timestamp')[:5]
     
     context = {
         'tasks': task_data,
@@ -113,6 +114,7 @@ def dashboard(request):
         'longest_streak': streak_obj.longest_streak,
         'today': today,
         'all_done': all_done_today,
+        'recent_activity': recent_activity,
     }
     return render(request, 'dashboard.html', context)
 

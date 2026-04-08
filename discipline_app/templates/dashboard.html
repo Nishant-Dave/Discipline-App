@@ -1,45 +1,181 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Discipline Dashboard</h1>
-<p><strong>Current Streak:</strong> {{ streak }} days</p>
-<p><strong>Longest Streak:</strong> {{ longest_streak }}</p>
-<p><strong>Today:</strong> {{ today }}</p>
+<style>
+    body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        background-color: #f5f7fa;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+    }
+    h1, h2, h3 { margin-top: 0; }
+    .dashboard-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    .card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    .stat-box {
+        background: #f8fafc;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+    }
+    .stat-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #2563eb;
+    }
+    .task-list, .activity-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .task-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .task-item:last-child { border-bottom: none; }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    .status-DONE { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .status-FAILED { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .status-PENDING { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
 
-{% if all_done %}
-    <p style="color:green">✅ All tasks completed today. Discipline maintained.</p>
-{% else %}
-    <p style="color:red">⚠️ Incomplete tasks remain. Complete before deadline.</p>
-{% endif %}
+    .btn {
+        background: #2563eb;
+        color: white;
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+        display: inline-block;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-danger { background: #fee2e2; color: #991b1b; }
+    .btn-danger:hover { background: #fecaca; }
+    
+    .notice {
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        font-weight: 500;
+    }
+    .notice-success { background: #dcfce7; border: 1px solid #bbf7d0; color: #166534; }
+    .notice-warning { background: #fee2e2; border: 1px solid #fecaca; color: #991b1b; }
+    .ends-today { font-size: 13px; color: #64748b; margin-top: 5px;}
+</style>
 
-<h2>Your Active Tasks</h2>
-{% if tasks %}
-    <ul>
-    {% for item in tasks %}
-        <li>
-            <strong>{{ item.task.title }}</strong><br>
-            Status: {{ item.record.status }}<br>
-            {% if item.record.status == 'PENDING' %}
-                <form method="post" action="{% url 'checkin' item.task.id %}" style="display:inline">
-                    {% csrf_token %}
-                    <button type="submit">Mark Done</button>
-                </form>
-            {% elif item.record.status == 'DONE' %}
-                ✅ Completed
-            {% elif item.record.status == 'FAILED' %}
-                ❌ Failed
-            {% endif %}
-            <form method="post" action="{% url 'deactivate' item.task.id %}" style="display:inline">
-                {% csrf_token %}
-                <button type="submit" onclick="return confirm('Deactivate task? Cannot reactivate.')">Deactivate</button>
-            </form>
-        </li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No active tasks. Create one below.</p>
-{% endif %}
+<div class="dashboard-container">
+    <h1 style="margin-bottom:20px;">Discipline Dashboard</h1>
 
-<a href="{% url 'new_task_page' %}">Create New Task</a>
+    <div class="card">
+        <h2 style="margin-bottom:15px; font-size:18px; color:#475569;">Current Streak</h2>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <div style="font-size:13px; color:#64748b; margin-bottom:5px;">CURRENT</div>
+                <div class="stat-value">{{ streak }} days</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size:13px; color:#64748b; margin-bottom:5px;">LONGEST</div>
+                <div class="stat-value">{{ longest_streak }} days</div>
+            </div>
+            <div class="stat-box">
+                <div style="font-size:13px; color:#64748b; margin-bottom:5px;">DATE</div>
+                <div class="stat-value" style="font-size:20px;">{{ today }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% if all_done %}
+        <div class="notice notice-success">✅ All tasks completed today. Discipline maintained.</div>
+    {% else %}
+        <div class="notice notice-warning">⚠️ Incomplete tasks remain. Complete before deadline.</div>
+    {% endif %}
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h2 style="margin:0; font-size:18px; color:#475569;">Today's Tasks</h2>
+            <a href="{% url 'new_task_page' %}" class="btn">+ New Task</a>
+        </div>
+        
+        {% if tasks %}
+            <ul class="task-list">
+            {% for item in tasks %}
+                <li class="task-item">
+                    <div>
+                        <strong style="font-size:16px;">{{ item.task.title }}</strong>
+                        <div class="ends-today">Ends today</div>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="status-badge status-{{ item.record.status }}">{{ item.record.status }}</span>
+                        
+                        {% if item.record.status == 'PENDING' %}
+                            <form method="post" action="{% url 'checkin' item.task.id %}" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn">Mark Done</button>
+                            </form>
+                        {% endif %}
+                        
+                        <form method="post" action="{% url 'deactivate' item.task.id %}" style="margin:0;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Deactivate task? Cannot reactivate.')">Skip / Deactivate</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p style="color:#64748b;">No active tasks for today. Have a break, or create a new one!</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <h2 style="margin-bottom:15px; font-size:18px; color:#475569;">Weekly Performance</h2>
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;">
+            <thead>
+                <tr style="border-bottom: 2px solid #e2e8f0; color: #64748b;">
+                    <th style="padding: 10px 5px;">Date</th>
+                    <th style="padding: 10px 5px;">Completed</th>
+                    <th style="padding: 10px 5px;">Failed</th>
+                    <th style="padding: 10px 5px;">Percentage</th>
+                </tr>
+            </thead>
+            <tbody id="weekly-report-body">
+                <tr><td colspan="4" style="text-align:center; padding:15px; color:#64748b;">Loading analytics...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2 style="margin-bottom:15px; font-size:18px; color:#475569;">Recent Activity</h2>
+        <ul id="recent-activity-list" class="activity-list">
+            <li style="color:#64748b;">Loading activity...</li>
+        </ul>
+    </div>
+</div>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -55,11 +191,90 @@
             }).then(response => {
                 if (response.ok) {
                     console.log('Timezone updated to:', tz);
-                } else {
-                    console.error('Failed to update timezone');
                 }
             });
         }
+
+        // Fetch recent activity
+        fetch('/api/activity/', {
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const list = document.getElementById('recent-activity-list');
+            list.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                list.innerHTML = '<li style="color:#64748b;">No recent activity.</li>';
+                return;
+            }
+            
+            data.slice(0, 5).forEach(log => {
+                const li = document.createElement('li');
+                li.style.cssText = 'padding: 10px 0; border-bottom: 1px solid #f1f5f9; display:flex; gap:10px; align-items:center;';
+                
+                const date = new Date(log.timestamp);
+                const diffMs = new Date() - date;
+                const diffMins = Math.round(diffMs / 60000);
+                const diffHours = Math.round(diffMins / 60);
+                const diffDays = Math.round(diffHours / 24);
+                
+                let relTime = '';
+                if (diffMins < 1) relTime = 'just now';
+                else if (diffMins < 60) relTime = `${diffMins}m ago`;
+                else if (diffHours < 24) relTime = `${diffHours}h ago`;
+                else relTime = `${diffDays}d ago`;
+                
+                let metadataStr = log.metadata && log.metadata.task ? ` <span style="color:#475569;">- ${log.metadata.task}</span>` : '';
+                
+                li.innerHTML = `
+                    <span style="color:#64748b; font-size:13px; min-width:80px;">${relTime}</span>
+                    <div>
+                        <strong>${log.action}</strong>${metadataStr}
+                    </div>
+                `;
+                list.appendChild(li);
+            });
+        })
+        .catch(err => {
+            const list = document.getElementById('recent-activity-list');
+            if (list) list.innerHTML = '<li style="color:#ef4444;">Failed to load activity.</li>';
+        });
+
+        // Fetch weekly report
+        fetch('/api/weekly-report/', {
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const tbody = document.getElementById('weekly-report-body');
+            tbody.innerHTML = '';
+            
+            data.forEach(day => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #f1f5f9';
+                
+                let percentageColor = '#854d0e'; // Default neutral/yellow
+                if (day.completion_percentage >= 80) percentageColor = '#166534'; // Green
+                else if (day.completion_percentage < 50) percentageColor = '#991b1b'; // Red
+                
+                tr.innerHTML = `
+                    <td style="padding: 10px 5px;">${day.date}</td>
+                    <td style="padding: 10px 5px; color: #166534; font-weight: 500;">${day.completed_tasks}</td>
+                    <td style="padding: 10px 5px; color: #991b1b; font-weight: 500;">${day.failed_tasks}</td>
+                    <td style="padding: 10px 5px; color: ${percentageColor}; font-weight: bold;">${day.completion_percentage}%</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        })
+        .catch(err => {
+            const tbody = document.getElementById('weekly-report-body');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:15px; color:#ef4444;">Failed to load analytics.</td></tr>';
+        });
     });
 </script>
 {% endblock %}
