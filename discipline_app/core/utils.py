@@ -45,21 +45,4 @@ def recalculate_streak(user):
             streak_obj.save()
             
     return streak_obj.current_streak
-
-def apply_failure_consequences(user, consequence_level='medium'):
-    """Applies streak deductions based on consequence level."""
-    streak_obj, _ = Streak.objects.get_or_create(user=user)
-    
-    if consequence_level == 'easy':
-        streak_obj.current_streak = max(0, streak_obj.current_streak - 1)
-    elif consequence_level == 'medium':
-        streak_obj.current_streak = max(0, streak_obj.current_streak - 3)
-    elif consequence_level == 'hard':
-        streak_obj.current_streak = 0
-    else:
-        streak_obj.current_streak = 0
-        
-    if streak_obj.current_streak == 0:
-        streak_obj.last_success_date = None
-        
-    streak_obj.save()
+

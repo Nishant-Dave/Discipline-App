@@ -21,8 +21,46 @@ class ConsequenceEngine:
         update_discipline_score(user)
 
         # Apply consequence based on level
-        from core.utils import apply_failure_consequences
-        apply_failure_consequences(user, consequence_level=daily_record.task.consequence_level)
+        from core.models import DailyRecord, Task
+        from core.utils import get_user_local_time
+        from datetime import timedelta
+        
+        consequence = daily_record.task.consequence_level
+        streak_obj, _ = Streak.objects.get_or_create(user=user)
+
+        if consequence == 'easy':
+            # Do not reset streak, only failure count increments
+            pass
+        elif consequence == 'medium':
+            # Reset streak to 0
+            streak_obj.current_streak = 0
+            streak_obj.last_success_date = None
+            streak_obj.save()
+        elif consequence == 'hard':
+            # Reset streak to 0
+            streak_obj.current_streak = 0
+            streak_obj.last_success_date = None
+            streak_obj.save()
+            
+            # Create a penalty daily record via a new task since DailyRecord relies on Task.title
+            local_now = get_user_local_time(user)
+            tomorrow = local_now.date() + timedelta(days=1)
+            tomorrow_day_str = tomorrow.strftime('%a').lower()
+            
+            penalty_task = Task.objects.create(
+                user=user,
+                title=f"Penalty: {daily_record.task.title}",
+                description="Automatic penalty for failing a HARD task.",
+                days_of_week=[tomorrow_day_str],
+                consequence_level='hard',
+                is_active=True
+            )
+            
+            DailyRecord.objects.create(
+                task=penalty_task,
+                date=tomorrow,
+                status='PENDING'
+            )
 
         # Log Activity
         ActivityLog.objects.create(
@@ -34,4 +72,4 @@ class ConsequenceEngine:
             }
         )
 
-        logger.warning(f"Task '{daily_record.task.title}' failed for user '{user.username}'. Streak penalty applied.")
+        logger.warning(f"Task '{daily_record.task.title}' failed for user '{user.username}'. Consequence level: {consequence}")
