@@ -22,11 +22,15 @@ class UserStatsAPIView(APIView):
         
         # We can now use the pre-calculated score from the User model
         
+        from services.consequence_engine import ConsequenceEngine
+        monthly_pct = ConsequenceEngine.get_monthly_completion_percentage(user)
+        
         data = {
             'current_streak': streak_obj.current_streak,
             'longest_streak': streak_obj.longest_streak,
             'total_failures': failed_records,
-            'discipline_score': user.discipline_score
+            'discipline_score': user.discipline_score,
+            'monthly_completion_percentage': round(monthly_pct, 2)
         }
         
         return Response(data)
