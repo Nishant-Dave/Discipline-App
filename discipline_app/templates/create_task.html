@@ -1,30 +1,127 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Create New Task</h2>
-<form method="post" action="{% url 'create_task' %}">
-    {% csrf_token %}
-    <input type="text" name="title" placeholder="Task title" required><br>
-    <textarea name="description" placeholder="Description (optional)"></textarea><br>
-    <div class="form-group">
-        <label>Active Days (Task targets):</label><br>
-        <input type="checkbox" name="days_of_week" value="mon" checked> Mon
-        <input type="checkbox" name="days_of_week" value="tue" checked> Tue
-        <input type="checkbox" name="days_of_week" value="wed" checked> Wed
-        <input type="checkbox" name="days_of_week" value="thu" checked> Thu
-        <input type="checkbox" name="days_of_week" value="fri" checked> Fri
-        <input type="checkbox" name="days_of_week" value="sat" checked> Sat
-        <input type="checkbox" name="days_of_week" value="sun" checked> Sun
+<div class="max-w-2xl mx-auto">
+    <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-8 shadow-xl">
+        <div class="mb-8">
+            <h1 class="text-2xl font-bold text-slate-100 mb-2">Create New Task</h1>
+            <p class="text-slate-400 text-sm">Define a new discipline protocol to track and maintain.</p>
+        </div>
+
+        <form method="post" action="{% url 'create_task' %}" x-data="{ 
+            days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], 
+            severity: 'medium',
+            submitting: false 
+        }" @submit="submitting = true" :class="{ 'opacity-50 pointer-events-none transition-opacity duration-300': submitting }">
+            {% csrf_token %}
+            
+            <div class="space-y-6">
+                <!-- Title Field -->
+                <div>
+                    <label for="title" class="block text-sm font-medium text-slate-300 mb-2">Task Title</label>
+                    <input type="text" id="title" name="title" required
+                        placeholder="e.g. Morning Workout, Read 10 pages" 
+                        class="w-full bg-slate-900/50 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner">
+                </div>
+
+                <!-- Description Field -->
+                <div>
+                    <label for="description" class="block text-sm font-medium text-slate-300 mb-2">Description <span class="text-slate-500 font-normal">(Optional)</span></label>
+                    <textarea id="description" name="description" rows="3"
+                        placeholder="Add some context or motivation..." 
+                        class="w-full bg-slate-900/50 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner resize-y"></textarea>
+                </div>
+
+                <!-- Active Days Section -->
+                <div>
+                    <label class="block text-sm font-medium text-slate-300 mb-3">Active Days (Task targets)</label>
+                    <div class="flex flex-wrap gap-2 sm:gap-3">
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="mon" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('mon') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">MON</div>
+                        </label>
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="tue" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('tue') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">TUE</div>
+                        </label>
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="wed" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('wed') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">WED</div>
+                        </label>
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="thu" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('thu') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">THU</div>
+                        </label>
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="fri" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('fri') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">FRI</div>
+                        </label>
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="sat" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('sat') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">SAT</div>
+                        </label>
+                        <label class="cursor-pointer select-none">
+                            <input type="checkbox" name="days_of_week" value="sun" x-model="days" class="hidden">
+                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
+                                :class="days.includes('sun') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">SUN</div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Consequence Severity -->
+                <div class="bg-slate-900/30 border border-slate-700/50 rounded-xl p-5 mt-4">
+                    <label for="consequence_level" class="block text-sm font-medium text-slate-300 mb-2">Failure Consequence Severity</label>
+                    <select id="consequence_level" name="consequence_level" x-model="severity"
+                        class="w-full bg-slate-800 border border-slate-700 text-slate-200 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all appearance-none cursor-pointer shadow-inner">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                    
+                    <div class="mt-3 relative h-6">
+                        <p x-show="severity === 'easy'" 
+                           x-transition:enter="transition ease-out duration-200"
+                           x-transition:enter-start="opacity-0 -translate-y-1"
+                           x-transition:enter-end="opacity-100 translate-y-0"
+                           class="absolute inset-0 text-sm text-green-400 flex items-center gap-2 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Easy: Lose 1 streak day upon failure.
+                        </p>
+                        <p x-show="severity === 'medium'" 
+                           x-transition:enter="transition ease-out duration-200"
+                           x-transition:enter-start="opacity-0 -translate-y-1"
+                           x-transition:enter-end="opacity-100 translate-y-0"
+                           class="absolute inset-0 text-sm text-yellow-400 flex items-center gap-2 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            Medium: Lose 3 streak days upon failure.
+                        </p>
+                        <p x-show="severity === 'hard'" 
+                           x-transition:enter="transition ease-out duration-200"
+                           x-transition:enter-start="opacity-0 -translate-y-1"
+                           x-transition:enter-end="opacity-100 translate-y-0"
+                           class="absolute inset-0 text-sm text-red-400 flex items-center gap-2 font-medium">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Hard: Complete streak reset upon failure.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button type="submit" 
+                        class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200">
+                        Create Non-Negotiable Task
+                    </button>
+                    <div class="mt-4 text-center">
+                        <a href="{% url 'dashboard' %}" class="text-sm text-slate-400 hover:text-slate-300 transition-colors">Cancel and return to dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-    
-    <div class="form-group" style="margin-top: 10px;">
-        <label>Failure Consequence Severity:</label><br>
-        <select name="consequence_level">
-            <option value="easy">Easy (Lose 1 streak day)</option>
-            <option value="medium" selected>Medium (Lose 3 streak days)</option>
-            <option value="hard">Hard (Complete streak reset)</option>
-        </select>
-    </div>
-    <br>
-    <button type="submit">Create Non-Negotiable Task</button>
-</form>
+</div>
 {% endblock %}
