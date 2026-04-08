@@ -17,5 +17,6 @@ urlpatterns = [
     path('stats/', views.stats, name='stats'),
     path('set-timezone/', views.set_timezone, name='set_timezone'),
     path('api/', include('api.urls')), 
+    path('__reload__/', include('django_browser_reload.urls')),
 ]
 

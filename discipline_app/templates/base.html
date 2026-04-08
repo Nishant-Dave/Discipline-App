@@ -1,22 +1,51 @@
+{% load tailwind_tags %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discipline App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="/static/css/style.css">
+    {% tailwind_css %}
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body>
-    <nav>
-        <a href="{% url 'dashboard' %}">Dashboard</a>
-        <a href="{% url 'new_task_page' %}">Create Task</a>
-        <a href="{% url 'stats' %}">Stats</a>
-        <a href="{% url 'user_settings' %}">Settings</a>
-        {% if user.is_authenticated %}
-            <form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button type="submit">Logout</button></form>
-        {% endif %}
+<body class="bg-slate-900 text-gray-100 font-sans antialiased min-h-screen flex flex-col">
+    <!-- Navbar -->
+    <nav class="bg-slate-800 border-b border-slate-700 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Branding -->
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400 tracking-tight">Discipline App</span>
+                    </div>
+                    <div class="hidden md:ml-10 md:flex md:items-baseline md:space-x-4">
+                        <a href="{% url 'dashboard' %}" class="hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Dashboard</a>
+                        <a href="{% url 'new_task_page' %}" class="hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Create Task</a>
+                        <a href="{% url 'stats' %}" class="hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-colors">Stats</a>
+                    </div>
+                </div>
+
+                <!-- Right Side -->
+                <div class="hidden md:flex items-center space-x-4">
+                    {% if user.is_authenticated %}
+                        <form method="post" action="{% url 'logout' %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 px-4 py-2 rounded-md text-sm font-medium transition-colors border border-red-500/20">
+                                Logout
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </nav>
-    <main>
-        {% block content %}{% endblock %}
+
+    <!-- Main Content -->
+    <main class="flex-grow">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 </body>
 </html>

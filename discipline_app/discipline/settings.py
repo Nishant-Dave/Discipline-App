@@ -4,8 +4,8 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Set DEBUG from environment variable, default to False for safety
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+# Set DEBUG from environment variable, default to True for local dev
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'unsafe-default-key-for-dev')
 
@@ -21,6 +21,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic', # Whitenoise for static files
     'django.contrib.staticfiles',
+    'tailwind',
+    'theme',
+    'django_browser_reload',
     'rest_framework',
     'core',
     'api',
@@ -35,6 +38,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django_browser_reload.middleware.BrowserReloadMiddleware',
 ]
 
 DATABASES = {
@@ -100,3 +104,8 @@ LOGIN_URL = '/login/'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 AUTH_USER_MODEL = 'core.User'
+
+TAILWIND_APP_NAME = 'theme'
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
