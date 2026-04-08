@@ -99,31 +99,31 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Analytics Card -->
-    <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-lg">
+    <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-lg overflow-hidden flex flex-col">
         <h2 class="text-lg font-semibold text-slate-300 mb-6">Weekly Performance</h2>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm whitespace-nowrap">
-                <thead>
-                    <tr class="border-b border-slate-700 text-slate-400">
-                        <th class="pb-3 px-2 font-semibold">Date</th>
-                        <th class="pb-3 px-2 font-semibold">Completed</th>
-                        <th class="pb-3 px-2 font-semibold text-center">Failed</th>
-                        <th class="pb-3 px-2 font-semibold text-right">Percentage</th>
+        <div class="overflow-x-auto -mx-6 px-6 sm:mx-0 sm:px-0 flex-grow">
+            <table class="w-full text-left text-sm whitespace-nowrap table-auto border-collapse">
+                <thead class="bg-slate-900/40">
+                    <tr class="text-slate-400 text-xs uppercase tracking-widest border-y border-slate-700/50">
+                        <th class="py-3 px-4 font-semibold rounded-tl-lg">Date</th>
+                        <th class="py-3 px-3 font-semibold text-center">Done</th>
+                        <th class="py-3 px-3 font-semibold text-center">Failed</th>
+                        <th class="py-3 px-4 font-semibold text-right rounded-tr-lg">Accuracy</th>
                     </tr>
                 </thead>
                 <tbody id="weekly-report-body" class="divide-y divide-slate-700/50">
-                    <tr><td colspan="4" class="py-8 text-center text-slate-500">Loading analytics...</td></tr>
+                    <tr><td colspan="4" class="py-8 text-center text-slate-500 font-medium">Loading analytics...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- Activity Card -->
-    <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-lg">
+    <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-6 shadow-lg flex flex-col">
         <h2 class="text-lg font-semibold text-slate-300 mb-6">Recent Activity</h2>
-        <ul id="recent-activity-list" class="divide-y divide-slate-700/50">
-            <li class="py-4 text-slate-500">Loading activity...</li>
-        </ul>
+        <div class="relative border-l border-slate-700 ml-3 space-y-6 flex-grow pb-4" id="recent-activity-list">
+            <div class="pl-6 py-2 text-slate-500">Loading activity...</div>
+        </div>
     </div>
 </div>
 
@@ -153,13 +153,20 @@
             list.innerHTML = '';
             
             if (!data || data.length === 0) {
-                list.innerHTML = '<li class="py-4 text-slate-500 text-sm">No recent activity.</li>';
+                list.innerHTML = '<div class="pl-6 py-2 text-slate-500 text-sm font-medium">No recent activity.</div>';
                 return;
             }
             
             data.slice(0, 6).forEach(log => {
-                const li = document.createElement('li');
-                li.className = 'py-3 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 justify-between group';
+                const div = document.createElement('div');
+                div.className = 'relative pl-6 group';
+                
+                let indicatorColor = 'bg-slate-500 border-slate-400';
+                if (log.action.toLowerCase().includes('done') || log.action.toLowerCase().includes('success') || log.action.toLowerCase().includes('completed') || log.action.toLowerCase().includes('create')) {
+                    indicatorColor = 'bg-green-500/20 border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]';
+                } else if (log.action.toLowerCase().includes('fail') || log.action.toLowerCase().includes('deactivate') || log.action.toLowerCase().includes('skip')) {
+                    indicatorColor = 'bg-red-500/20 border-red-500 shadow-[0_0_8px_rgba(239,68,68,0.4)]';
+                }
                 
                 const date = new Date(log.timestamp);
                 const diffMs = new Date() - date;
@@ -174,22 +181,25 @@
                 else relTime = `${diffDays}d ago`;
                 
                 let metadataStr = log.metadata && log.metadata.task 
-                    ? `<span class="text-slate-500 text-sm ml-1 truncate max-w-[200px]" title="${log.metadata.task}">- ${log.metadata.task}</span>` 
+                    ? `<div class="text-slate-400 text-sm mt-0.5 truncate max-w-[220px]" title="${log.metadata.task}">${log.metadata.task}</div>` 
                     : '';
                 
-                li.innerHTML = `
-                    <div class="flex items-center">
-                        <strong class="text-sm text-slate-300 font-medium whitespace-nowrap">${log.action}</strong>
-                        ${metadataStr}
+                div.innerHTML = `
+                    <div class="absolute w-3 h-3 rounded-full border-2 -left-[1.6rem] top-1 transition-all duration-300 group-hover:scale-125 ${indicatorColor}"></div>
+                    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 sm:gap-3">
+                        <div class="min-w-0 flex-1">
+                            <strong class="text-sm text-slate-200 font-semibold tracking-wide">${log.action}</strong>
+                            ${metadataStr}
+                        </div>
+                        <span class="text-slate-500 text-[11px] font-bold uppercase tracking-wider bg-slate-900/60 px-2.5 py-1 rounded-md w-fit flex-shrink-0 mt-1 sm:mt-0">${relTime}</span>
                     </div>
-                    <span class="text-slate-500 text-xs font-medium bg-slate-900/50 px-2 py-1 rounded w-fit sm:w-auto">${relTime}</span>
                 `;
-                list.appendChild(li);
+                list.appendChild(div);
             });
         })
         .catch(err => {
             const list = document.getElementById('recent-activity-list');
-            if (list) list.innerHTML = '<li class="py-4 text-red-500 text-sm">Failed to load activity.</li>';
+            if (list) list.innerHTML = '<div class="pl-6 py-2 text-red-500 text-sm">Failed to load activity.</div>';
         });
 
         // Fetch weekly report
@@ -206,26 +216,26 @@
             
             data.forEach((day, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = 'group hover:bg-slate-700/20 transition-colors pointer-events-none sm:pointer-events-auto';
+                tr.className = 'group hover:bg-slate-700/30 transition-colors duration-200';
                 
-                let percentageColor = 'text-yellow-400'; 
+                let percentageColor = 'text-yellow-400 group-hover:border-yellow-400'; 
                 let badgeColor = 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400';
                 
                 if (day.completion_percentage >= 80) {
-                    percentageColor = 'text-green-400';
-                    badgeColor = 'bg-green-500/10 border-green-500/20 text-green-400';
+                    percentageColor = 'text-green-400 group-hover:border-green-400';
+                    badgeColor = 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.15)]';
                 }
                 else if (day.completion_percentage < 50) {
-                    percentageColor = 'text-red-400';
-                    badgeColor = 'bg-red-500/10 border-red-500/20 text-red-400';
+                    percentageColor = 'text-red-400 group-hover:border-red-400';
+                    badgeColor = 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.15)]';
                 }
                 
                 tr.innerHTML = `
-                    <td class="py-3.5 px-2 text-slate-300 font-medium">${day.date}</td>
-                    <td class="py-3.5 px-2 text-green-400 font-medium">${day.completed_tasks}</td>
-                    <td class="py-3.5 px-2 text-red-400 font-medium text-center">${day.failed_tasks}</td>
-                    <td class="py-3.5 px-2 font-bold text-right text-sm">
-                        <span class="${badgeColor} border px-2 py-1 rounded inline-block min-w-[3.5rem] text-center">${day.completion_percentage}%</span>
+                    <td class="py-4 px-4 text-slate-300 font-medium border-l-[3px] border-transparent transition-colors ${percentageColor}">${day.date}</td>
+                    <td class="py-4 px-3 text-slate-200 font-medium text-center">${day.completed_tasks}</td>
+                    <td class="py-4 px-3 text-slate-400 font-medium text-center">${day.failed_tasks}</td>
+                    <td class="py-4 px-4 font-bold text-right text-sm">
+                        <span class="${badgeColor} border px-2.5 py-1.5 rounded-md inline-block min-w-[4.5rem] text-center transition-all group-hover:scale-105 tracking-wide">${day.completion_percentage}%</span>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -233,7 +243,7 @@
         })
         .catch(err => {
             const tbody = document.getElementById('weekly-report-body');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-red-500">Failed to load analytics.</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-red-500 font-medium">Failed to load analytics.</td></tr>';
         });
     });
 </script>
