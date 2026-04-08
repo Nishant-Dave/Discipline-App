@@ -8,4 +8,4 @@ class ActivityLogListAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return ActivityLog.objects.filter(user=self.request.user)
+        return ActivityLog.objects.filter(user=self.request.user).order_by('-timestamp')[:20]

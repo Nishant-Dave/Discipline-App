@@ -90,6 +90,12 @@ class ConsequenceEngine:
                 date=tomorrow,
                 status='PENDING'
             )
+            
+            ActivityLog.objects.create(
+                user=user,
+                action="Penalty created",
+                metadata={'task': penalty_task.title}
+            )
 
         # Log Activity
         ActivityLog.objects.create(
