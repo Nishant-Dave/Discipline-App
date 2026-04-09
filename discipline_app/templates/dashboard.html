@@ -9,6 +9,7 @@
 .animate-shake {
     animation: shake 0.25s ease-in-out;
 }
+[x-cloak] { display: none !important; }
 </style>
 
 <h1 class="text-3xl font-bold text-slate-100 mb-8">Discipline Dashboard</h1>
@@ -57,8 +58,8 @@
     {% if tasks %}
         <ul class="space-y-4">
         {% for item in tasks %}
-            <li x-data="{ action: '' }" 
-                class="bg-slate-700/30 border border-slate-600/50 rounded-lg p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300"
+            <li x-data="{ action: '', showModal: false }" 
+                class="bg-slate-700/30 border border-slate-600/50 rounded-lg p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300 relative"
                 :class="{ 'opacity-0 scale-95 pointer-events-none': action === 'done', 'animate-shake opacity-75 border-red-500/50 pointer-events-none': action === 'fail' }">
                 <div>
                     <strong class="text-lg text-slate-100 font-semibold tracking-tight">{{ item.task.title }}</strong>
@@ -76,10 +77,34 @@
                     </span>
                     
                     {% if item.record.status == 'PENDING' %}
-                        <form hx-post="{% url 'checkin' item.task.id %}" hx-target="body" hx-swap="outerHTML" @submit="action = 'done'">
-                            {% csrf_token %}
-                            <button type="submit" class="bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 text-white font-medium py-2 px-4 rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm">Mark Done</button>
-                        </form>
+                        {% if item.task.consequence_level == 'easy' %}
+                            <form hx-post="{% url 'checkin' item.task.id %}" hx-target="body" hx-swap="outerHTML" @submit="action = 'done'">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 text-white font-medium py-2 px-4 rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm">Mark Done</button>
+                            </form>
+                        {% else %}
+                            <button type="button" @click="showModal = true" class="bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 text-white font-medium py-2 px-4 rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm">Mark Done</button>
+                            
+                            <!-- Proof Modal -->
+                            <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" @click="showModal = false"></div>
+                                <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 relative z-10 w-full max-w-md shadow-2xl transform transition-all" @click.stop>
+                                    <h3 class="text-xl font-bold text-slate-100 mb-2">Upload Proof</h3>
+                                    <p class="text-sm text-slate-400 mb-6">This task requires photographic proof for completion.</p>
+                                    
+                                    <form hx-post="{% url 'checkin' item.task.id %}" hx-encoding="multipart/form-data" hx-target="body" hx-swap="outerHTML" @submit="action = 'done'; showModal = false">
+                                        {% csrf_token %}
+                                        <div class="mb-6">
+                                            <input type="file" name="proof_image" accept="image/*" required class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 transition-all border border-slate-700 rounded-lg bg-slate-900/50 cursor-pointer">
+                                        </div>
+                                        <div class="flex justify-end gap-3">
+                                            <button type="button" @click="showModal = false" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors border border-transparent hover:border-slate-600 rounded-md">Cancel</button>
+                                            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-md shadow-sm transition-all duration-200 text-sm">Submit Proof</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endif %}
                     {% endif %}
                     
                     <form hx-post="{% url 'deactivate' item.task.id %}" hx-target="body" hx-swap="outerHTML" hx-confirm="Deactivate task? Cannot reactivate." @submit="action = 'fail'">
