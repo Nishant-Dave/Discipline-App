@@ -12,7 +12,10 @@
 [x-cloak] { display: none !important; }
 </style>
 
-<h1 class="text-3xl font-bold text-slate-100 mb-8">Discipline Dashboard</h1>
+<div class="mb-10">
+    <h1 class="text-4xl font-bold text-white tracking-tight">Hello, {{ user.username }}</h1>
+    <p class="text-gray-400 mt-2 text-lg">{{ today|date:"l, F j, Y" }}</p>
+</div>
 
 {% if all_done %}
     <div class="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-xl mb-6 font-medium flex items-center gap-3">
@@ -56,68 +59,102 @@
     </div>
     
     {% if tasks %}
-        <ul class="space-y-4">
+        <ul class="space-y-2">
         {% for item in tasks %}
-            <li x-data="{ action: '', showModal: false }" 
-                class="bg-slate-700/30 border border-slate-600/50 rounded-lg p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all duration-300 relative"
-                :class="{ 'opacity-0 scale-95 pointer-events-none': action === 'done', 'animate-shake opacity-75 border-red-500/50 pointer-events-none': action === 'fail' }">
-                <div>
-                    <strong class="text-lg text-slate-100 font-semibold tracking-tight">{{ item.task.title }}</strong>
-                    <div class="text-sm text-slate-400 mt-1 flex items-center gap-1.5">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Ends today
-                    </div>
-                </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <span class="px-2.5 py-1 rounded-md text-xs font-bold tracking-wide uppercase
-                        {% if item.record.status == 'DONE' %}bg-green-500/10 text-green-400 border border-green-500/20
-                        {% elif item.record.status == 'FAILED' %}bg-red-500/10 text-red-500 border border-red-500/20
-                        {% else %}bg-yellow-500/10 text-yellow-400 border border-yellow-500/20{% endif %}">
+            <li class="bg-slate-800 border-l-4 rounded-r-lg shadow-sm flex items-center justify-between p-3 transition-all duration-300"
+                :class="{
+                    'border-green-500': '{{ item.task.consequence_level }}' === 'easy',
+                    'border-yellow-500': '{{ item.task.consequence_level }}' === 'medium',
+                    'border-red-500': '{{ item.task.consequence_level }}' === 'hard'
+                }">
+                
+                <div class="flex items-center gap-3">
+                    <strong class="text-sm text-slate-100 font-medium">{{ item.task.title }}</strong>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase
+                        {% if item.record.status == 'DONE' %}bg-green-500/20 text-green-400
+                        {% else %}bg-slate-700 text-slate-400{% endif %}">
                         {{ item.record.status }}
                     </span>
-                    
+                </div>
+
+                <div class="flex items-center gap-2">
                     {% if item.record.status == 'PENDING' %}
                         {% if item.task.consequence_level == 'easy' %}
-                            <form hx-post="{% url 'checkin' item.task.id %}" hx-target="body" hx-swap="outerHTML" @submit="action = 'done'">
+                            <form hx-post="{% url 'checkin' item.task.id %}" hx-target="closest li" hx-swap="outerHTML">
                                 {% csrf_token %}
-                                <button type="submit" class="bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 text-white font-medium py-2 px-4 rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm">Mark Done</button>
+                                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 px-3 rounded">Done</button>
                             </form>
                         {% else %}
-                            <button type="button" @click="showModal = true" class="bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0 text-white font-medium py-2 px-4 rounded-md shadow-sm hover:shadow-md transition-all duration-200 text-sm">Mark Done</button>
-                            
-                            <!-- Proof Modal -->
-                            <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
-                                <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" @click="showModal = false"></div>
-                                <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 relative z-10 w-full max-w-md shadow-2xl transform transition-all" @click.stop>
-                                    <h3 class="text-xl font-bold text-slate-100 mb-2">Upload Proof</h3>
-                                    <p class="text-sm text-slate-400 mb-6">This task requires photographic proof for completion.</p>
-                                    
-                                    <form hx-post="{% url 'checkin' item.task.id %}" hx-encoding="multipart/form-data" hx-target="body" hx-swap="outerHTML" @submit="action = 'done'; showModal = false">
-                                        {% csrf_token %}
-                                        <div class="mb-6">
-                                            <input type="file" name="proof_image" accept="image/*" required class="block w-full text-sm text-slate-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500 transition-all border border-slate-700 rounded-lg bg-slate-900/50 cursor-pointer">
-                                        </div>
-                                        <div class="flex justify-end gap-3">
-                                            <button type="button" @click="showModal = false" class="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors border border-transparent hover:border-slate-600 rounded-md">Cancel</button>
-                                            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white font-medium py-2 px-6 rounded-md shadow-sm transition-all duration-200 text-sm">Submit Proof</button>
-                                        </div>
-                                    </form>
+                            <div x-data="{ showModal: false }">
+                                <button type="button" @click="showModal = true" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-1.5 px-3 rounded">Done</button>
+                                
+                                <!-- Proof Modal -->
+                                <div x-show="showModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4" x-data="{ imagePreview: null, fileName: '' }">
+                                    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm" @click="showModal = false"></div>
+                                    <div class="bg-slate-800 border border-slate-600 rounded-xl p-6 relative z-10 w-full max-w-md shadow-2xl">
+                                        <h3 class="text-xl font-bold text-slate-100 mb-2">Upload Proof</h3>
+                                        <form hx-post="{% url 'checkin' item.task.id %}" hx-encoding="multipart/form-data" hx-target="closest li" hx-swap="outerHTML" @submit="showModal = false">
+                                            {% csrf_token %}
+                                            <div class="mb-4 border-2 border-dashed border-slate-600 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 transition-colors"
+                                                 @click="$refs.fileInput.click()"
+                                                 @dragover.prevent @drop.prevent="
+                                                    const file = $event.dataTransfer.files[0];
+                                                    if (file) {
+                                                        fileName = file.name;
+                                                        const reader = new FileReader();
+                                                        reader.onload = (e) => imagePreview = e.target.result;
+                                                        reader.readAsDataURL(file);
+                                                        $refs.fileInput.files = $event.dataTransfer.files;
+                                                    }">
+                                                <template x-if="!imagePreview">
+                                                    <span class="text-slate-500 text-sm">Drag & Drop or Click</span>
+                                                </template>
+                                                <img x-show="imagePreview" :src="imagePreview" class="max-h-32 rounded">
+                                            </div>
+                                            <input type="file" x-ref="fileInput" name="proof_image" accept="image/*" required class="hidden" @change="
+                                                const file = $event.target.files[0];
+                                                if (file) {
+                                                    fileName = file.name;
+                                                    const reader = new FileReader();
+                                                    reader.onload = (e) => imagePreview = e.target.result;
+                                                    reader.readAsDataURL(file);
+                                                }">
+                                            <p x-text="fileName" class="text-xs text-slate-400 mb-4 truncate"></p>
+                                            <button type="submit" class="bg-blue-600 w-full py-2 rounded text-white font-bold text-sm">Submit Proof</button>
+                                        </form>
+                                    </div>
                                 </div>
                             </div>
                         {% endif %}
                     {% endif %}
                     
-                    <form hx-post="{% url 'deactivate' item.task.id %}" hx-target="body" hx-swap="outerHTML" hx-confirm="Deactivate task? Cannot reactivate." @submit="action = 'fail'">
+                    {% if item.record.proof %}
+                        <div x-data="{ showViewModal: false }">
+                            <button type="button" @click="showViewModal = true" class="bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-bold py-1.5 px-3 rounded">View</button>
+                            <div x-show="showViewModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                <div class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm" @click="showViewModal = false"></div>
+                                <img src="{{ item.record.proof.url }}" class="relative z-10 max-h-[80vh] max-w-[80vw] rounded-lg shadow-2xl" @click.stop>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <form hx-post="{% url 'deactivate' item.task.id %}" hx-target="closest li" hx-swap="outerHTML" hx-confirm="Delete task?">
                         {% csrf_token %}
-                        <button type="submit" class="bg-red-500/10 hover:bg-red-500/20 hover:-translate-y-0.5 active:translate-y-0 text-red-400 hover:text-red-300 border border-red-500/20 shadow-sm hover:shadow-md font-medium py-2 px-4 rounded-md transition-all duration-200 text-sm">Skip / Deactivate</button>
+                        <button type="submit" class="bg-slate-700 hover:bg-red-900/50 text-slate-400 hover:text-red-400 text-xs font-bold py-1.5 px-3 rounded">✕</button>
                     </form>
                 </div>
             </li>
         {% endfor %}
         </ul>
     {% else %}
-        <div class="text-center py-8 bg-slate-800/50 border border-dashed border-slate-600 rounded-lg">
-            <p class="text-slate-400 font-medium">No active tasks for today. Have a break, or create a new one!</p>
+        <div class="text-center py-12">
+            <p class="text-slate-500 font-medium">
+                {% if all_done %}
+                    All tasks completed. Discipline maintained.
+                {% else %}
+                    No tasks for today. Stay disciplined.
+                {% endif %}
+            </p>
         </div>
     {% endif %}
 </div>
@@ -226,50 +263,8 @@
             const list = document.getElementById('recent-activity-list');
             if (list) list.innerHTML = '<div class="pl-6 py-2 text-red-500 text-sm">Failed to load activity.</div>';
         });
-
-        // Fetch weekly report
-        fetch('/api/weekly-report/', { headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
-        .then(response => response.json())
-        .then(data => {
-            const tbody = document.getElementById('weekly-report-body');
-            tbody.innerHTML = '';
-            
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-slate-500">No data available.</td></tr>';
-                return;
-            }
-            
-            data.forEach((day, idx) => {
-                const tr = document.createElement('tr');
-                tr.className = 'group hover:bg-slate-700/30 transition-colors duration-200';
-                
-                let percentageColor = 'text-yellow-400 group-hover:border-yellow-400'; 
-                let badgeColor = 'bg-yellow-500/10 border-yellow-500/20 text-yellow-400';
-                
-                if (day.completion_percentage >= 80) {
-                    percentageColor = 'text-green-400 group-hover:border-green-400';
-                    badgeColor = 'bg-green-500/10 border-green-500/20 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.15)]';
-                }
-                else if (day.completion_percentage < 50) {
-                    percentageColor = 'text-red-400 group-hover:border-red-400';
-                    badgeColor = 'bg-red-500/10 border-red-500/20 text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.15)]';
-                }
-                
-                tr.innerHTML = `
-                    <td class="py-4 px-4 text-slate-300 font-medium border-l-[3px] border-transparent transition-colors ${percentageColor}">${day.date}</td>
-                    <td class="py-4 px-3 text-slate-200 font-medium text-center">${day.completed_tasks}</td>
-                    <td class="py-4 px-3 text-slate-400 font-medium text-center">${day.failed_tasks}</td>
-                    <td class="py-4 px-4 font-bold text-right text-sm">
-                        <span class="${badgeColor} border px-2.5 py-1.5 rounded-md inline-block min-w-[4.5rem] text-center transition-all group-hover:scale-105 tracking-wide">${day.completion_percentage}%</span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        })
-        .catch(err => {
-            const tbody = document.getElementById('weekly-report-body');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="4" class="py-8 text-center text-red-500 font-medium">Failed to load analytics.</td></tr>';
-        });
+        
+        // ... rest of script
     });
 </script>
 

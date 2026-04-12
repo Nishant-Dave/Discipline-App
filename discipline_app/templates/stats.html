@@ -9,6 +9,60 @@
         </a>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('statsChart', () => ({
+                filter: 'week',
+                chartInstance: null,
+                async init() {
+                    await this.updateChart();
+                },
+                async updateChart() {
+                    const response = await fetch(`/api/weekly-report/?range=${this.filter}`);
+                    const data = await response.json();
+                    const ctx = document.getElementById('statsChart').getContext('2d');
+                    
+                    if (this.chartInstance) this.chartInstance.destroy();
+                    
+                    Chart.defaults.color = '#94a3b8';
+                    this.chartInstance = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: data.map(d => d.date.split('-').slice(1).join('/')),
+                            datasets: [
+                                { label: 'Completed', data: data.map(d => d.completed_tasks), backgroundColor: '#10b981', borderRadius: 4 },
+                                { label: 'Failed', data: data.map(d => d.failed_tasks), backgroundColor: '#ef4444', borderRadius: 4 }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#334155' } },
+                                x: { grid: { display: false } }
+                            },
+                            plugins: { legend: { labels: { color: '#f1f5f9' } } }
+                        }
+                    });
+                }
+            }));
+        });
+    </script>
+    <!-- Analytics Chart -->
+    <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-8 shadow-xl mb-8" x-data="statsChart">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-bold text-slate-100">Performance Trends</h2>
+            <div class="flex bg-slate-900 rounded-lg p-1">
+                <button @click="filter = 'week'" :class="filter === 'week' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-4 py-1.5 rounded text-sm font-medium transition-all">This week</button>
+                <button @click="filter = 'month'" :class="filter === 'month' ? 'bg-slate-700 text-white' : 'text-slate-400'" class="px-4 py-1.5 rounded text-sm font-medium transition-all">This month</button>
+            </div>
+        </div>
+        <div class="h-64">
+            <canvas id="statsChart"></canvas>
+        </div>
+    </div>
+    
     <!-- Top Section: Overview Card -->
     <div class="bg-slate-800 border border-slate-700/50 rounded-2xl p-8 shadow-xl mb-8">
         <h2 class="text-xl font-bold text-slate-100 mb-6">Performance Overview</h2>

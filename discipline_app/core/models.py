@@ -46,7 +46,6 @@ class Task(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
     days_of_week = models.JSONField(default=default_days_of_week)
     consequence_level = models.CharField(max_length=10, choices=CONSEQUENCE_CHOICES, default='medium')
     start_date = models.DateField(auto_now_add=True)

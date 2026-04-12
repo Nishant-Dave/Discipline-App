@@ -7,9 +7,10 @@
             <p class="text-slate-400 text-sm">Define a new discipline protocol to track and maintain.</p>
         </div>
 
-        <form method="post" action="{% url 'create_task' %}" x-data="{ 
+<form method="post" action="{% url 'create_task' %}" x-data="{ 
             days: ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], 
             severity: 'medium',
+            type: 'repeat',
             submitting: false 
         }" @submit="submitting = true" :class="{ 'opacity-50 pointer-events-none transition-opacity duration-300': submitting }">
             {% csrf_token %}
@@ -23,54 +24,39 @@
                         class="w-full bg-slate-900/50 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner">
                 </div>
 
+                <!-- Recurrence Toggle -->
+                <div class="bg-slate-900/30 border border-slate-700/50 rounded-xl p-4" x-data="{ repeat: true }">
+                    <div class="flex items-center gap-6">
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-300 cursor-pointer">
+                            <input type="checkbox" x-model="repeat" class="accent-blue-600 rounded">
+                            Repeat task
+                        </label>
+                        <label class="flex items-center gap-2 text-sm font-medium text-slate-400 cursor-pointer" x-show="repeat">
+                            <input type="checkbox" @change="if($event.target.checked) days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']; else days = []" :checked="days.length === 7" class="accent-blue-600 rounded">
+                            Everyday
+                        </label>
+                    </div>
+
+                    <!-- Days Selection -->
+                    <div class="mt-4 flex flex-wrap gap-2" x-show="repeat" x-cloak x-transition>
+                        {% for day in days_list %}
+                            <label class="cursor-pointer">
+                                <input type="checkbox" name="days_of_week" value="{{ day }}" x-model="days" class="hidden">
+                                <div class="w-9 h-9 flex items-center justify-center rounded text-[10px] font-bold transition-all border border-slate-700"
+                                    :class="days.includes('{{ day }}') ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-500'">
+                                    {{ day|upper|slice:":3" }}
+                                </div>
+                            </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
                 <!-- Description Field -->
                 <div>
                     <label for="description" class="block text-sm font-medium text-slate-300 mb-2">Description <span class="text-slate-500 font-normal">(Optional)</span></label>
                     <textarea id="description" name="description" rows="3"
                         placeholder="Add some context or motivation..." 
                         class="w-full bg-slate-900/50 border border-slate-700 text-slate-200 placeholder-slate-500 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-inner resize-y"></textarea>
-                </div>
-
-                <!-- Active Days Section -->
-                <div>
-                    <label class="block text-sm font-medium text-slate-300 mb-3">Active Days (Task targets)</label>
-                    <div class="flex flex-wrap gap-2 sm:gap-3">
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="mon" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('mon') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">MON</div>
-                        </label>
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="tue" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('tue') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">TUE</div>
-                        </label>
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="wed" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('wed') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">WED</div>
-                        </label>
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="thu" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('thu') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">THU</div>
-                        </label>
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="fri" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('fri') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">FRI</div>
-                        </label>
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="sat" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('sat') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">SAT</div>
-                        </label>
-                        <label class="cursor-pointer select-none">
-                            <input type="checkbox" name="days_of_week" value="sun" x-model="days" class="hidden">
-                            <div class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-sm font-bold tracking-wide transition-all duration-300"
-                                :class="days.includes('sun') ? 'bg-blue-600 text-white shadow-[0_0_12px_rgba(37,99,235,0.4)] scale-105' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700 border border-slate-600/50'">SUN</div>
-                        </label>
-                    </div>
                 </div>
 
                 <!-- Consequence Severity -->

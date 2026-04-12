@@ -8,6 +8,7 @@ from django.views.decorators.http import require_http_methods
 import json
 import pytz
 import logging
+from datetime import timedelta
 
 from .forms import CustomUserCreationForm
 from .models import Task, DailyRecord, Streak, ActivityLog
@@ -60,19 +61,13 @@ def set_timezone(request):
     return JsonResponse({'status': 'fallback', 'timezone': 'UTC'})
 
 @login_required
-def user_settings(request):
-    if request.method == 'POST':
-        tz = request.POST.get('timezone')
-        if tz in pytz.all_timezones:
-            request.user.timezone = tz
-            request.user.save()
-            return redirect('dashboard')
-    
-    return render(request, 'settings.html', {'timezones': pytz.all_timezones})
-
-@login_required
 def dashboard(request):
     user = request.user
+    # Ensure user has a timezone set
+    if not user.timezone:
+        user.timezone = 'UTC'
+        user.save()
+        
     local_now = get_user_local_time(user)
     today = local_now.date()
     
@@ -113,6 +108,7 @@ def dashboard(request):
         'streak': streak_obj.current_streak,
         'longest_streak': streak_obj.longest_streak,
         'today': today,
+        'today_full_date': today,
         'all_done': all_done_today,
         'recent_activity': recent_activity,
     }
@@ -120,14 +116,13 @@ def dashboard(request):
 
 @login_required
 def create_task_page(request):
-    return render(request, 'create_task.html')
+    return render(request, 'create_task.html', {'days_list': ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']})
 
 @login_required
 @require_http_methods(["POST"])
 def create_task(request):
     user = request.user
     title = request.POST.get('title')
-    description = request.POST.get('description', '')
     days_of_week = request.POST.getlist('days_of_week')
     consequence_level = request.POST.get('consequence_level', 'medium')
     
@@ -135,7 +130,7 @@ def create_task(request):
         return JsonResponse({'error': 'Title and at least one day required'}, status=400)
     
     Task.objects.create(
-        user=user, title=title, description=description,
+        user=user, title=title,
         days_of_week=days_of_week, consequence_level=consequence_level, is_active=True
     )
     ActivityLog.objects.create(
@@ -196,17 +191,14 @@ def deactivate_task(request, task_id):
 
 @login_required
 def stats(request):
-    user = request.user
-    streak_obj = Streak.objects.get_or_create(user=user)[0]
-    failed_records = DailyRecord.objects.filter(task__user=user, status='FAILED').select_related('task')
-    total = DailyRecord.objects.filter(task__user=user).count()
-    completed = DailyRecord.objects.filter(task__user=user, status='DONE').count()
-    
-    percentage = (completed / total * 100) if total > 0 else 0
-
+    # ... (existing stats view logic)
     return render(request, 'stats.html', {
         'streak': streak_obj.current_streak,
         'longest_streak': streak_obj.longest_streak,
         'failures': failed_records,
         'completion_percentage': round(percentage, 2),
+        'chart_data': json.dumps(chart_data),
     })
+
+def about(request):
+    return render(request, 'about.html')

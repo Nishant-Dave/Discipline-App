@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-3xl mx-auto py-12">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-white">About Discipline App</h1>
+        <p class="text-slate-400 mt-4 text-lg">Discipline over motivation.</p>
+    </div>
+
+    <div class="space-y-8">
+        <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-8 shadow-lg">
+            <h2 class="text-2xl font-bold text-white mb-4">What is this app?</h2>
+            <p class="text-slate-300">Discipline App is an accountability-focused platform designed for users who want to move past temporary motivation and build lasting, non-negotiable habits through structured task enforcement and consequence tracking.</p>
+        </div>
+
+        <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-8 shadow-lg">
+            <h2 class="text-2xl font-bold text-white mb-4">How it works</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h3 class="font-bold text-blue-400">1. Create</h3>
+                    <p class="text-sm text-slate-400">Define your non-negotiable tasks.</p>
+                </div>
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h3 class="font-bold text-blue-400">2. Complete</h3>
+                    <p class="text-sm text-slate-400">Finish tasks on time every day.</p>
+                </div>
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h3 class="font-bold text-blue-400">3. Proof</h3>
+                    <p class="text-sm text-slate-400">Upload mandatory evidence.</p>
+                </div>
+                <div class="bg-slate-900/50 p-4 rounded-lg border border-slate-700">
+                    <h3 class="font-bold text-blue-400">4. Consequence</h3>
+                    <p class="text-sm text-slate-400">Automatic penalties for failure.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-slate-800 border border-slate-700/50 rounded-xl p-8 shadow-lg">
+            <h2 class="text-2xl font-bold text-white mb-4">Key Features</h2>
+            <ul class="list-disc list-inside text-slate-300 space-y-2">
+                <li>Non-negotiable recurring tasks</li>
+                <li>Severity-based consequence engine</li>
+                <li>Mandatory proof validation system</li>
+                <li>Performance and streak analytics</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

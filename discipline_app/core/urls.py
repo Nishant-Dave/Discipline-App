@@ -11,7 +11,6 @@ urlpatterns = [
     path('create-task/submit/', views.create_task, name='create_task'),
     path('checkin/<int:task_id>/', views.checkin, name='checkin'),
     path('deactivate/<int:task_id>/', views.deactivate_task, name='deactivate_task'),
-    path('settings/', views.user_settings, name='settings'),
     path('stats/', views.stats, name='stats'),
     path('set-timezone/', views.set_timezone, name='set_timezone'),
     
