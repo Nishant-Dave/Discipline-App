@@ -1,5 +1,6 @@
 # Discipline App
 
+<<<<<<< HEAD
 A disciplined, proof-based task enforcement system designed to help users maintain consistency and accountability through strict task management, consequence tracking, and actionable analytics.
 
 ## Features
@@ -51,3 +52,12 @@ A disciplined, proof-based task enforcement system designed to help users mainta
 
 ## Live Demo
 [Link to live application placeholder]
+=======
+A Django application for discipline management.
+
+## Setup
+1. Create virtual environment: `python -m venv venv`
+2. Activate: `.\venv\Scripts\activate` (Windows)
+3. Install: `pip install -r requirements.txt`
+4. Run: `python manage.py runserver`
+>>>>>>> 0c4a547 (fix: changed directory tree)
