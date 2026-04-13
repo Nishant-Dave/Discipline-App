@@ -1,1 +1,1 @@
-web: gunicorn discipline_app.wsgi
+web: gunicorn discipline.wsgi:application
